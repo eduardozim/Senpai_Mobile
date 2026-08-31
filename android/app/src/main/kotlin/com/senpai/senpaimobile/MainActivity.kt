@@ -1,0 +1,5 @@
+package com.senpai.senpaimobile
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()
