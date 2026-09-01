@@ -31,7 +31,6 @@ class MenuPage extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // Marca d'água repetida preenchendo o fundo
           Opacity(
             opacity: 0.03,
             child: Container(
@@ -39,12 +38,11 @@ class MenuPage extends StatelessWidget {
                 image: DecorationImage(
                   image: AssetImage('assets/mon-bunbukan.png'),
                   repeat: ImageRepeat.repeat,
-                  scale: 6.0, // Um pouco menor para o menu
+                  scale: 6.0,
                 ),
               ),
             ),
           ),
-          // Conteúdo do menu
           ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
             children: [
@@ -83,25 +81,26 @@ class MenuPage extends StatelessWidget {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 1),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.black12),
-        color: Colors.white.withValues(alpha: 0.9), 
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        leading: Icon(icon, size: 30, color: Colors.black),
-        title: Text(
-          title.toUpperCase(),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1),
+    // CORREÇÃO: Usando Material para evitar o erro de InkSplash e DecoratedBox
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.9),
+        shape: Border.all(color: Colors.black12),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          leading: Icon(icon, size: 30, color: Colors.black),
+          title: Text(
+            title.toUpperCase(),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+          ),
+          trailing: const Icon(Icons.chevron_right, color: Colors.black26),
+          onTap: onTap,
         ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-        ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.black26),
-        onTap: onTap,
       ),
     );
   }

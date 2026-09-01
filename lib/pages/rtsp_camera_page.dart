@@ -1,8 +1,14 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shelf/shelf.dart' as shelf;
+import 'package:shelf/shelf_io.dart' as io;
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class RtspCameraPage extends StatefulWidget {
@@ -19,6 +25,11 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
   String? _localIp;
   bool _isVertical = true;
   int _selectedCameraIndex = 0;
+  
+  HttpServer? _server;
+  final StreamController<Uint8List> _frameStream = StreamController<Uint8List>.broadcast();
+  Timer? _timer;
+  bool _isCapturing = false;
 
   @override
   void initState() {
@@ -40,7 +51,7 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
     }
 
     _localIp = await NetworkInfo().getWifiIP();
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Future<void> _initCamera(CameraDescription cameraDescription) async {
@@ -50,8 +61,8 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
 
     _controller = CameraController(
       cameraDescription,
-      ResolutionPreset.medium,
-      enableAudio: true,
+      ResolutionPreset.medium, // Motorola Edge 50 suporta bem 480p/720p
+      enableAudio: false,
     );
 
     try {
@@ -60,61 +71,86 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
         setState(() {});
       }
     } catch (e) {
-      debugPrint('Error initializing camera: $e');
+      debugPrint('Erro câmera: $e');
     }
   }
 
-  void _toggleStreaming() {
-    setState(() {
-      _isStreaming = !_isStreaming;
+  Future<void> _startServer() async {
+    final handler = const shelf.Pipeline()
+        .addMiddleware(shelf.logRequests())
+        .addHandler((shelf.Request request) {
+      if (request.url.path == 'live') {
+        return shelf.Response.ok(
+          _frameStream.stream,
+          headers: {
+            'Content-Type': 'multipart/x-mixed-replace; boundary=frame',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Pragma': 'no-cache',
+          },
+        );
+      }
+      return shelf.Response.notFound('Not Found');
     });
 
-    if (_isStreaming) {
+    try {
+      _server = await io.serve(handler, '0.0.0.0', 8554);
+      
+      // Loop de captura seguro (1 frame a cada 300ms = ~3 FPS)
+      // O segredo para não crashar o Motorola é o flag _isCapturing
+      _timer = Timer.periodic(const Duration(milliseconds: 300), (timer) async {
+        if (_isStreaming && !_isCapturing && _controller != null && _controller!.value.isInitialized) {
+          _isCapturing = true;
+          try {
+            final XFile file = await _controller!.takePicture();
+            final bytes = await file.readAsBytes();
+            
+            _frameStream.add(Uint8List.fromList([
+              ...ascii.encode('--frame\r\n'),
+              ...ascii.encode('Content-Type: image/jpeg\r\n'),
+              ...ascii.encode('Content-Length: ${bytes.length}\r\n\r\n'),
+              ...bytes,
+              ...ascii.encode('\r\n'),
+            ]));
+            
+            // Limpeza imediata do arquivo temporário
+            File(file.path).delete().catchError((e) => debugPrint(e.toString()));
+          } catch (e) {
+            debugPrint('Erro frame: $e');
+          } finally {
+            _isCapturing = false;
+          }
+        }
+      });
+    } catch (e) {
+      debugPrint('Erro servidor: $e');
+    }
+  }
+
+  Future<void> _stopServer() async {
+    _timer?.cancel();
+    await _server?.close(force: true);
+    _server = null;
+  }
+
+  void _toggleStreaming() async {
+    if (!_isStreaming) {
+      await _startServer();
+      if (mounted) setState(() { _isStreaming = true; });
       WakelockPlus.enable();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.black,
-          content: Text('Transmissão Iniciada'),
-        ),
-      );
     } else {
+      await _stopServer();
+      if (mounted) setState(() { _isStreaming = false; });
       WakelockPlus.disable();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.black,
-          content: Text('Transmissão Interrompida'),
-        ),
-      );
     }
-  }
-
-  void _rotateCamera() {
-    setState(() {
-      _isVertical = !_isVertical;
-    });
-    if (_isVertical) {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    } else {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
-    }
-  }
-
-  void _switchCamera() {
-    if (_cameras == null || _cameras!.length < 2) return;
-    _selectedCameraIndex = (_selectedCameraIndex + 1) % _cameras!.length;
-    _initCamera(_cameras![_selectedCameraIndex]);
   }
 
   @override
   void dispose() {
+    _stopServer();
     _controller?.dispose();
     WakelockPlus.disable();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    _frameStream.close();
     super.dispose();
   }
 
@@ -127,7 +163,7 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
       );
     }
 
-    final String rtspUrl = 'rtsp://${_localIp ?? "0.0.0.0"}:8554/live';
+    final String streamUrl = 'rtsp://${_localIp ?? "0.0.0.0"}:8554/live';
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -161,7 +197,7 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
                             style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 1),
                           ),
                           Text(
-                            _isStreaming ? 'TRANSMITINDO' : 'OFFLINE',
+                            _isStreaming ? 'STREAMING ON' : 'OFFLINE',
                             style: TextStyle(
                               color: _isStreaming ? Colors.greenAccent : Colors.white,
                               fontWeight: FontWeight.bold,
@@ -172,7 +208,10 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.flip_camera_android, color: Colors.white),
-                        onPressed: _switchCamera,
+                        onPressed: () {
+                          _selectedCameraIndex = (_selectedCameraIndex + 1) % _cameras!.length;
+                          _initCamera(_cameras![_selectedCameraIndex]);
+                        },
                       ),
                     ],
                   ),
@@ -189,17 +228,23 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
                     child: Column(
                       children: [
                         const Text(
-                          'LINK RTSP',
+                          'LINK PARA CONEXÃO (VLC)',
                           style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 2),
                         ),
                         const SizedBox(height: 8),
                         SelectableText(
-                          rtspUrl,
+                          streamUrl,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w300,
-                            fontSize: 16,
+                            fontSize: 13,
                           ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          '* Funciona também via HTTP no Browser',
+                          style: TextStyle(color: Colors.grey, fontSize: 8),
                         ),
                       ],
                     ),
@@ -211,10 +256,19 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildControlButton(
-                        icon: _isVertical ? Icons.stay_current_portrait : Icons.stay_current_landscape,
-                        label: 'ROTACIONAR',
-                        onTap: _rotateCamera,
+                      IconButton(
+                        icon: Icon(
+                          _isVertical ? Icons.stay_current_portrait : Icons.stay_current_landscape,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() { _isVertical = !_isVertical; });
+                          if (_isVertical) {
+                            SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+                          } else {
+                            SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
+                          }
+                        },
                       ),
                       GestureDetector(
                         onTap: _toggleStreaming,
@@ -232,10 +286,9 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
                           ),
                         ),
                       ),
-                      _buildControlButton(
-                        icon: _controller!.value.flashMode == FlashMode.torch ? Icons.flash_on : Icons.flash_off,
-                        label: 'FLASH',
-                        onTap: () {
+                      IconButton(
+                        icon: const Icon(Icons.flash_on, color: Colors.white),
+                        onPressed: () {
                            _controller?.setFlashMode(
                              _controller!.value.flashMode == FlashMode.off 
                                 ? FlashMode.torch 
@@ -252,26 +305,6 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildControlButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          icon: Icon(icon, color: Colors.white, size: 28),
-          onPressed: onTap,
-        ),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white70, fontSize: 9, letterSpacing: 1),
-        ),
-      ],
     );
   }
 }
