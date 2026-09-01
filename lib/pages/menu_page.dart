@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'rtsp_camera_page.dart';
+import 'welcome_page.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -7,33 +8,68 @@ class MenuPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('SenpAI Menu'),
+        title: Text(
+          'SenpAI Menu'.toUpperCase(),
+          style: const TextStyle(fontWeight: FontWeight.w300, letterSpacing: 2),
+        ),
         centerTitle: true,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildMenuCard(
-            context,
-            title: 'Câmera RTSP',
-            subtitle: 'Transmitir vídeo pela rede local',
-            icon: Icons.videocam,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const RtspCameraPage()),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sair',
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const WelcomePage()),
               );
             },
           ),
-          const SizedBox(height: 12),
-          _buildMenuCard(
-            context,
-            title: 'Configurações',
-            subtitle: 'Ajustes do aplicativo',
-            icon: Icons.settings,
-            onTap: () {
-              // TODO: Implement settings
-            },
+        ],
+      ),
+      body: Stack(
+        children: [
+          // Marca d'água repetida preenchendo o fundo
+          Opacity(
+            opacity: 0.03,
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/mon-bunbukan.png'),
+                  repeat: ImageRepeat.repeat,
+                  scale: 6.0, // Um pouco menor para o menu
+                ),
+              ),
+            ),
+          ),
+          // Conteúdo do menu
+          ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+            children: [
+              _buildMenuCard(
+                context,
+                title: 'Câmera RTSP',
+                subtitle: 'Transmitir vídeo local',
+                icon: Icons.videocam_outlined,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const RtspCameraPage()),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildMenuCard(
+                context,
+                title: 'Configurações',
+                subtitle: 'Ajustes do sistema',
+                icon: Icons.settings_outlined,
+                onTap: () {
+                  // TODO: Implement settings
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -47,18 +83,24 @@ class MenuPage extends StatelessWidget {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 1),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.black12),
+        color: Colors.white.withValues(alpha: 0.9), 
+      ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        leading: Icon(icon, size: 40, color: Colors.purpleAccent),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        leading: Icon(icon, size: 30, color: Colors.black),
         title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          title.toUpperCase(),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1),
         ),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.arrow_forward_ios),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+        ),
+        trailing: const Icon(Icons.chevron_right, color: Colors.black26),
         onTap: onTap,
       ),
     );

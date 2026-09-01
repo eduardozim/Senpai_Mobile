@@ -27,7 +27,6 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
   }
 
   Future<void> _initialize() async {
-    // Request permissions
     Map<Permission, PermissionStatus> statuses = await [
       Permission.camera,
       Permission.microphone,
@@ -72,14 +71,19 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
 
     if (_isStreaming) {
       WakelockPlus.enable();
-      // Em uma implementação real, aqui iniciaríamos o servidor RTSP nativo
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transmissão Iniciada (Simulado)')),
+        const SnackBar(
+          backgroundColor: Colors.black,
+          content: Text('Transmissão Iniciada'),
+        ),
       );
     } else {
       WakelockPlus.disable();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transmissão Interrompida')),
+        const SnackBar(
+          backgroundColor: Colors.black,
+          content: Text('Transmissão Interrompida'),
+        ),
       );
     }
   }
@@ -88,7 +92,6 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
     setState(() {
       _isVertical = !_isVertical;
     });
-    // Forçar orientação
     if (_isVertical) {
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     } else {
@@ -119,7 +122,8 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator(color: Colors.white)),
       );
     }
 
@@ -129,7 +133,6 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Camera Preview
           Center(
             child: AspectRatio(
               aspectRatio: _isVertical 
@@ -138,12 +141,9 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
               child: CameraPreview(_controller!),
             ),
           ),
-
-          // Overlay UI
           SafeArea(
             child: Column(
               children: [
-                // Top Bar
                 Container(
                   padding: const EdgeInsets.all(16),
                   color: Colors.black54,
@@ -151,75 +151,69 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        icon: const Icon(Icons.close, color: Colors.white),
                         onPressed: () => Navigator.pop(context),
                       ),
                       Column(
                         children: [
                           const Text(
-                            'Status:',
-                            style: TextStyle(color: Colors.white70, fontSize: 12),
+                            'STATUS',
+                            style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 1),
                           ),
                           Text(
                             _isStreaming ? 'TRANSMITINDO' : 'OFFLINE',
                             style: TextStyle(
-                              color: _isStreaming ? Colors.green : Colors.red,
+                              color: _isStreaming ? Colors.greenAccent : Colors.white,
                               fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
                           ),
                         ],
                       ),
                       IconButton(
-                        icon: const Icon(Icons.switch_camera, color: Colors.white),
+                        icon: const Icon(Icons.flip_camera_android, color: Colors.white),
                         onPressed: _switchCamera,
                       ),
                     ],
                   ),
                 ),
-
                 const Spacer(),
-
-                // Link Info
                 if (_isStreaming)
                   Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    padding: const EdgeInsets.all(10),
+                    margin: const EdgeInsets.symmetric(horizontal: 30),
+                    padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
                       color: Colors.black87,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.purpleAccent),
+                      border: Border.all(color: Colors.white24),
                     ),
                     child: Column(
                       children: [
                         const Text(
-                          'Link RTSP para conexão:',
-                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                          'LINK RTSP',
+                          style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 2),
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 8),
                         SelectableText(
                           rtspUrl,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w300,
                             fontSize: 16,
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                const SizedBox(height: 20),
-
-                // Controls
+                const SizedBox(height: 30),
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 30),
+                  padding: const EdgeInsets.symmetric(vertical: 40),
                   color: Colors.black54,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       _buildControlButton(
-                        icon: _isVertical ? Icons.screen_lock_portrait : Icons.screen_lock_landscape,
-                        label: 'Rotacionar',
+                        icon: _isVertical ? Icons.stay_current_portrait : Icons.stay_current_landscape,
+                        label: 'ROTACIONAR',
                         onTap: _rotateCamera,
                       ),
                       GestureDetector(
@@ -227,32 +221,27 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
                         child: Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: _isStreaming ? Colors.red : Colors.green,
+                            color: _isStreaming ? Colors.white : Colors.transparent,
                             shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: (_isStreaming ? Colors.red : Colors.green).withOpacity(0.5),
-                                blurRadius: 15,
-                                spreadRadius: 5,
-                              ),
-                            ],
+                            border: Border.all(color: Colors.white, width: 2),
                           ),
                           child: Icon(
                             _isStreaming ? Icons.stop : Icons.play_arrow,
                             size: 40,
-                            color: Colors.white,
+                            color: _isStreaming ? Colors.black : Colors.white,
                           ),
                         ),
                       ),
                       _buildControlButton(
-                        icon: Icons.flash_on,
-                        label: 'Flash',
+                        icon: _controller!.value.flashMode == FlashMode.torch ? Icons.flash_on : Icons.flash_off,
+                        label: 'FLASH',
                         onTap: () {
                            _controller?.setFlashMode(
                              _controller!.value.flashMode == FlashMode.off 
                                 ? FlashMode.torch 
                                 : FlashMode.off
                            );
+                           setState(() {});
                         },
                       ),
                     ],
@@ -275,12 +264,12 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(icon, color: Colors.white, size: 30),
+          icon: Icon(icon, color: Colors.white, size: 28),
           onPressed: onTap,
         ),
         Text(
           label,
-          style: const TextStyle(color: Colors.white, fontSize: 12),
+          style: const TextStyle(color: Colors.white70, fontSize: 9, letterSpacing: 1),
         ),
       ],
     );

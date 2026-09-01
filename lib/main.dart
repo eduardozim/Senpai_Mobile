@@ -15,13 +15,30 @@ class SenpAiApp extends StatelessWidget {
       title: 'SenpAI Mobile',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        brightness: Brightness.light,
+        primaryColor: Colors.black,
+        scaffoldBackgroundColor: Colors.white,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.dark,
+          seedColor: Colors.black,
+          primary: Colors.black,
+          secondary: Colors.grey.shade700,
+          surface: Colors.white,
+          brightness: Brightness.light,
         ),
         useMaterial3: true,
         textTheme: GoogleFonts.notoSansTextTheme(
-          ThemeData.dark().textTheme,
+          ThemeData.light().textTheme,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+          ),
         ),
       ),
       home: const WelcomePage(),

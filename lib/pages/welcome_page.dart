@@ -8,72 +8,84 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black,
-              Colors.deepPurple.shade900,
-            ],
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Marca d'água repetida preenchendo o fundo
+          Opacity(
+            opacity: 0.03, // Ainda mais sutil por ser repetido
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/mon-bunbukan.png'),
+                  repeat: ImageRepeat.repeat,
+                  scale: 4.0, // Ajuste o tamanho da repetição aqui
+                ),
+              ),
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Spacer(),
-            // Kanji "Senpai"
-            Text(
-              '先輩',
-              style: GoogleFonts.notoSerifJp(
-                fontSize: 120,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                shadows: [
-                  const Shadow(
-                    blurRadius: 20,
-                    color: Colors.purpleAccent,
-                    offset: Offset(0, 0),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'SenpAI Mobile',
-              style: GoogleFonts.notoSans(
-                fontSize: 24,
-                letterSpacing: 4,
-                color: Colors.white70,
-              ),
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 50),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => const MenuPage()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purpleAccent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+          // Conteúdo da tela
+          SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(),
+                // Kanji "Senpai"
+                Text(
+                  '先輩',
+                  style: GoogleFonts.notoSerifJp(
+                    fontSize: 100,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 2,
+                        color: Colors.grey.shade400,
+                        offset: const Offset(2, 2),
+                      ),
+                    ],
                   ),
                 ),
-                child: const Text(
-                  'ENTRAR',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                const SizedBox(height: 10),
+                Text(
+                  'SenpAI Mobile',
+                  style: GoogleFonts.notoSans(
+                    fontSize: 22,
+                    letterSpacing: 6,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 60),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => const MenuPage()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 18),
+                      elevation: 0,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                        side: BorderSide(color: Colors.black, width: 1),
+                      ),
+                    ),
+                    child: const Text(
+                      'ENTRAR',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 2),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
