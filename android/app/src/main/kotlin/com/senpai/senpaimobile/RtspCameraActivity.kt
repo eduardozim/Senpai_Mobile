@@ -88,7 +88,7 @@ class RtspCameraActivity : Activity(), ConnectChecker {
         closeBtn.setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
         closeBtn.setColorFilter(Color.WHITE)
         closeBtn.setOnClickListener { finish() }
-        topBar.addView(closeBtn, LinearLayout.LayoutParams(80, 80))
+        topBar.addView(closeBtn, LinearLayout.LayoutParams(110, 110))
 
         val statusLayout = LinearLayout(this)
         statusLayout.orientation = LinearLayout.VERTICAL
@@ -98,13 +98,13 @@ class RtspCameraActivity : Activity(), ConnectChecker {
         val statusLabel = TextView(this)
         statusLabel.text = "STATUS"
         statusLabel.setTextColor(Color.LTGRAY)
-        statusLabel.textSize = 10f
+        statusLabel.textSize = 12f
         statusLabel.gravity = Gravity.CENTER
 
         statusText = TextView(this)
         statusText.text = "OFFLINE"
         statusText.setTextColor(Color.WHITE)
-        statusText.textSize = 12f
+        statusText.textSize = 16f
         statusText.gravity = Gravity.CENTER
 
         statusLayout.addView(statusLabel)
@@ -121,7 +121,7 @@ class RtspCameraActivity : Activity(), ConnectChecker {
                 e.printStackTrace()
             }
         }
-        topBar.addView(switchCamBtn, LinearLayout.LayoutParams(80, 80))
+        topBar.addView(switchCamBtn, LinearLayout.LayoutParams(110, 110))
 
         overlayLayout.addView(topBar)
 
@@ -140,12 +140,12 @@ class RtspCameraActivity : Activity(), ConnectChecker {
         val urlTitle = TextView(this)
         urlTitle.text = "LINK RTSP PARA CONEXÃO (VLC / NVR)"
         urlTitle.setTextColor(Color.LTGRAY)
-        urlTitle.textSize = 10f
+        urlTitle.textSize = 12f
 
         urlText = TextView(this)
         urlText.text = "rtsp://$localIp:8554/live"
         urlText.setTextColor(Color.WHITE)
-        urlText.textSize = 15f
+        urlText.textSize = 18f
         urlText.setPadding(0, 10, 0, 10)
         urlText.setOnClickListener {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -157,7 +157,7 @@ class RtspCameraActivity : Activity(), ConnectChecker {
         val urlTip = TextView(this)
         urlTip.text = "* Servidor RTSP Nativo Ativo. Toque para copiar o link."
         urlTip.setTextColor(Color.GRAY)
-        urlTip.textSize = 9f
+        urlTip.textSize = 11f
 
         urlCard.addView(urlTitle)
         urlCard.addView(urlText)
@@ -189,8 +189,8 @@ class RtspCameraActivity : Activity(), ConnectChecker {
                 ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             }
         }
-        val btnParams = LinearLayout.LayoutParams(100, 100)
-        btnParams.setMargins(30, 0, 30, 0)
+        val btnParams = LinearLayout.LayoutParams(140, 140)
+        btnParams.setMargins(40, 0, 40, 0)
         bottomBar.addView(rotateBtn, btnParams)
 
         // Play/Stop Button
@@ -200,8 +200,8 @@ class RtspCameraActivity : Activity(), ConnectChecker {
         playButton.setOnClickListener {
             toggleStreaming()
         }
-        val playParams = LinearLayout.LayoutParams(140, 140)
-        playParams.setMargins(40, 0, 40, 0)
+        val playParams = LinearLayout.LayoutParams(200, 200)
+        playParams.setMargins(50, 0, 50, 0)
         bottomBar.addView(playButton, playParams)
 
         // Flash Button

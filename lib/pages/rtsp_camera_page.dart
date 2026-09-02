@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -114,7 +113,7 @@ class _RtspCameraPageState extends State<RtspCameraPage> {
             ]));
             
             // Limpeza imediata do arquivo temporário
-            File(file.path).delete().catchError((e) => debugPrint(e.toString()));
+            await File(file.path).delete();
           } catch (e) {
             debugPrint('Erro frame: $e');
           } finally {

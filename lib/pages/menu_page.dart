@@ -48,7 +48,7 @@ class MenuPage extends StatelessWidget {
             children: [
               _buildMenuCard(
                 context,
-                title: 'Câmera RTSP NativA',
+                title: 'SenpAI Camera',
                 subtitle: 'Transmitir vídeo RTSP (VLC / NVR)',
                 icon: Icons.videocam_outlined,
                 onTap: () async {
