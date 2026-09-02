@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'rtsp_camera_page.dart';
+import 'package:flutter/services.dart';
 import 'welcome_page.dart';
 
 class MenuPage extends StatelessWidget {
@@ -48,13 +48,16 @@ class MenuPage extends StatelessWidget {
             children: [
               _buildMenuCard(
                 context,
-                title: 'Câmera RTSP',
-                subtitle: 'Transmitir vídeo local',
+                title: 'Câmera RTSP NativA',
+                subtitle: 'Transmitir vídeo RTSP (VLC / NVR)',
                 icon: Icons.videocam_outlined,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const RtspCameraPage()),
-                  );
+                onTap: () async {
+                  const platform = MethodChannel('com.senpai.senpaimobile/rtsp');
+                  try {
+                    await platform.invokeMethod('openRtspCamera');
+                  } on PlatformException catch (e) {
+                    debugPrint("Erro ao abrir câmera RTSP: '${e.message}'.");
+                  }
                 },
               ),
               const SizedBox(height: 16),
@@ -81,7 +84,6 @@ class MenuPage extends StatelessWidget {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    // CORREÇÃO: Usando Material para evitar o erro de InkSplash e DecoratedBox
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Material(
